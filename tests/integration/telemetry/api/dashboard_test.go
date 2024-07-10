@@ -149,7 +149,7 @@ func TestDashboard(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			t.ConfigKube().YAML("istio-system", yml.SplitYamlByKind(string(cfg))["ConfigMap"]).ApplyOrFail(t)
+			t.ConfigKube().YAML(apps.Namespace.Name(), yml.SplitYamlByKind(string(cfg))["ConfigMap"]).ApplyOrFail(t)
 
 			// We will send a bunch of requests until the test exits. This ensures we are continuously
 			// getting new metrics ingested. If we just send a bunch at once, Prometheus may scrape them
