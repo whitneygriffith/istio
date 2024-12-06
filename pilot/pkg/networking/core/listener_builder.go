@@ -358,7 +358,6 @@ func (lb *ListenerBuilder) buildHTTPConnectionManager(httpOpts *httpListenerOpts
 	websocketUpgrade := &hcm.HttpConnectionManager_UpgradeConfig{UpgradeType: "websocket"}
 	connectionManager.UpgradeConfigs = []*hcm.HttpConnectionManager_UpgradeConfig{websocketUpgrade}
 
-	// nil pointer
 	if idleTimeout := parseDuration(lb.node.Metadata.IdleTimeout); idleTimeout != nil {
 		connectionManager.CommonHttpProtocolOptions = &core.HttpProtocolOptions{
 			IdleTimeout: idleTimeout,
