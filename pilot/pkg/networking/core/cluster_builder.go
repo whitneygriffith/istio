@@ -611,7 +611,9 @@ func (cb *ClusterBuilder) setUpstreamProtocol(cluster *clusterWrapper, port *mod
 	}
 
 	// Preserve HTTP/1.x traffic header case
-	if port.Protocol.IsHTTP() && cb.req.Push.ProxyConfigs.EffectiveProxyConfig(cb.proxyMetadata, cb.req.Push.Mesh).GetProxyHeaders().GetPreserveHttp1HeaderCase().GetValue() {
+	if port.Protocol.IsHTTP() &&
+		cb.req.Push.ProxyConfigs.EffectiveProxyConfig(cb.proxyMetadata, cb.req.Push.Mesh).
+			GetProxyHeaders().GetPreserveHttp1HeaderCase().GetValue() {
 		// Apply the stateful formatter for HTTP/1.x headers
 		cluster.httpProtocolOptions.UpstreamProtocolOptions = &http.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &http.HttpProtocolOptions_ExplicitHttpConfig{
