@@ -611,7 +611,7 @@ func (cb *ClusterBuilder) setUpstreamProtocol(cluster *clusterWrapper, port *mod
 	}
 
 	// Preserve HTTP/1.x traffic header case
-	effectiveProxyConfig := cb.req.Push.ProxyConfigs.EffectiveProxyConfig(cb.proxyMetadata, cb.req.Push.Mesh) //TODO: cb.proxyMetadata.ProxyConfigOrDefault(cb.req.Push.Mesh.DefaultConfig)
+	effectiveProxyConfig := cb.proxyMetadata.ProxyConfigOrDefault(cb.req.Push.Mesh.GetDefaultConfig())
 	preserveHeaderCase := effectiveProxyConfig.GetProxyHeaders().GetPreserveHttp1HeaderCase().GetValue()
 
 	isExplicitHTTP := port.Protocol.IsHTTP()
