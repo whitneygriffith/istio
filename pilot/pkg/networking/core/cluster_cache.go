@@ -40,7 +40,7 @@ type clusterCache struct {
 	// proxy related cache fields
 	proxyVersion            string         // will be matched by envoyfilter patches
 	locality                *core.Locality // identifies the locality the cluster is generated for
-	preserveHttp1HeaderCase bool           // indicates whether the original case of HTTP/1.x headers should be preserved
+	preserveHTTP1HeaderCase bool           // indicates whether the original case of HTTP/1.x headers should be preserved
 	proxyClusterID          string         // identifies the kubernetes cluster a proxy is in
 	proxySidecar            bool           // identifies if this proxy is a Sidecar
 	hbone                   bool
@@ -193,7 +193,7 @@ func buildClusterKey(service *model.Service, port *model.Port, cb *ClusterBuilde
 		clusterName:             clusterName,
 		proxyVersion:            cb.proxyVersion.String(),
 		locality:                cb.locality,
-		preserveHttp1HeaderCase: preserveHeaderCase,
+		preserveHTTP1HeaderCase: preserveHeaderCase,
 		proxyClusterID:          cb.clusterID,
 		proxySidecar:            cb.sidecarProxy(),
 		proxyView:               cb.proxyView,
