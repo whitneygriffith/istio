@@ -84,6 +84,8 @@ type metadataCerts struct {
 // ClusterBuilder interface provides an abstraction for building Envoy Clusters.
 type ClusterBuilder struct {
 	// Proxy related information used to build clusters.
+	// The fields below that influence cluster configuration must be reflected in clusterCache
+	// to ensure accurate differentiation and caching of clusters.
 	serviceTargets     []model.ServiceTarget // Service targets of Proxy.
 	metadataCerts      *metadataCerts        // Client certificates specified in metadata.
 	clusterID          string                // Cluster in which proxy is running.
