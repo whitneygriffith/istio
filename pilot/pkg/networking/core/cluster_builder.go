@@ -586,9 +586,17 @@ func (cb *ClusterBuilder) setUseDownstreamProtocol(mc *clusterWrapper) {
 		mc.httpProtocolOptions = &http.HttpProtocolOptions{}
 	}
 	options := mc.httpProtocolOptions
+	// Inherit the HTTP1.x protocol options from the explicit HTTP1.x config.
+	explicitHttp1Options := &core.Http1ProtocolOptions{}
+	if explicitConfig, ok := options.GetUpstreamProtocolOptions().(*http.HttpProtocolOptions_ExplicitHttpConfig_); ok {
+		if protocolConfig, ok := explicitConfig.ExplicitHttpConfig.ProtocolConfig.(*http.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions); ok && protocolConfig.HttpProtocolOptions != nil {
+			// Use existing HTTP/1.x options if available
+			explicitHttp1Options = protocolConfig.HttpProtocolOptions
+		}
+	}
 	options.UpstreamProtocolOptions = &http.HttpProtocolOptions_UseDownstreamProtocolConfig{
 		UseDownstreamProtocolConfig: &http.HttpProtocolOptions_UseDownstreamHttpConfig{
-			HttpProtocolOptions:  &core.Http1ProtocolOptions{},
+			HttpProtocolOptions:  explicitHttp1Options,
 			Http2ProtocolOptions: http2ProtocolOptions(),
 		},
 	}
@@ -611,17 +619,19 @@ func (cb *ClusterBuilder) setUpstreamProtocol(cluster *clusterWrapper, port *mod
 		setH2Options(cluster)
 		return
 	}
-
 	// Preserve HTTP/1.x traffic header case
+	isExplicitHTTP := port.Protocol.IsHTTP()
+	isAutoProtocol := port.Protocol.IsUnsupported()
 	effectiveProxyConfig := cb.proxyMetadata.ProxyConfigOrDefault(cb.req.Push.Mesh.GetDefaultConfig())
 	preserveHeaderCase := effectiveProxyConfig.GetProxyHeaders().GetPreserveHttp1HeaderCase().GetValue()
 
-	isExplicitHTTP := port.Protocol.IsHTTP()
-	isAutoProtocol := port.Protocol.IsUnsupported()
-
 	if (isExplicitHTTP || isAutoProtocol) && preserveHeaderCase {
 		// Apply the stateful formatter for HTTP/1.x headers
-		cluster.httpProtocolOptions.UpstreamProtocolOptions = &http.HttpProtocolOptions_ExplicitHttpConfig_{
+		if cluster.httpProtocolOptions == nil {
+			cluster.httpProtocolOptions = &http.HttpProtocolOptions{}
+		}
+		options := cluster.httpProtocolOptions
+		options.UpstreamProtocolOptions = &http.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &http.HttpProtocolOptions_ExplicitHttpConfig{
 				ProtocolConfig: &http.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{
 					HttpProtocolOptions: &core.Http1ProtocolOptions{
@@ -649,7 +659,7 @@ func (cb *ClusterBuilder) setUpstreamProtocol(cluster *clusterWrapper, port *mod
 	// h2. Clients would then connect with h2, while the upstream may not support it. This is not a
 	// concern for plaintext, but we do not have a way to distinguish https vs http here. If users of
 	// gateway want this behavior, they can configure UseClientProtocol explicitly.
-	if cb.sidecarProxy() && port.Protocol.IsUnsupported() {
+	if cb.sidecarProxy() && isAutoProtocol {
 		// Use downstream protocol. If the incoming traffic use HTTP 1.1, the
 		// upstream cluster will use HTTP 1.1, if incoming traffic use HTTP2,
 		// the upstream cluster will use HTTP2.
